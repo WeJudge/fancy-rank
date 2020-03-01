@@ -1,0 +1,13 @@
+body, html, #root {
+  margin: 0;
+  height: 100%;
+}
+
+.fake_background {
+  height: 100%;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  padding-top: 5%;
+  box-sizing: border-box;
+}

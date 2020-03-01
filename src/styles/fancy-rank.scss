@@ -1,0 +1,133 @@
+$fancy-rank-item-height: 80px;
+$fancy-rank-item-line-height: 48px;
+$fancy-rank-number-size: 32px;
+$fancy-rank-name-size: 24px;
+$fancy-rank-tag-width: 80px;
+$fancy-rank-header-height: 32px;
+
+.fancy-rank {
+ background: rgba(0, 0, 0, 0.7);
+ top: 5%;
+ width: 90%;
+ height: 90%;
+ margin: 0 auto;
+ border-radius: 8px;
+ overflow: hidden;
+ display: flex;
+ flex-direction: column;
+
+ &-header {
+  flex: 0;
+  height: $fancy-rank-header-height;
+  line-height: $fancy-rank-header-height;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  display: flex;
+  flex-direction: row;
+  &-item {
+   text-align: center;
+   &.fill {
+    flex: 1 1 auto;
+   }
+   &.rank {
+    width: $fancy-rank-number-size * 3;
+   }
+   &.solved {
+    width: $fancy-rank-number-size * 2;
+   }
+   &.time {
+    width: $fancy-rank-number-size * 3;
+   }
+  }
+ }
+
+ &-warp {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding-right: 16px;
+  box-sizing: content-box;
+  overflow-x: hidden;
+  overflow-y: auto;
+ }
+
+ &-item {
+  color: white;
+  position: absolute;
+  height: $fancy-rank-item-height;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: row;
+
+  &:nth-child(even) {
+   background: rgba(255, 255, 255, 0.1);
+  }
+
+  .rank-item {
+
+   &-number {
+    text-align: center;
+    font-size: $fancy-rank-number-size;
+    line-height: $fancy-rank-item-height;
+    width: $fancy-rank-number-size * 3;
+   }
+   &-logo {
+    width: $fancy-rank-item-height;
+    height: $fancy-rank-item-height;
+    margin-right: 8px;
+   }
+   &-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+
+    &-team-name {
+     font-size: $fancy-rank-name-size;
+     height: $fancy-rank-item-line-height;
+     line-height: $fancy-rank-item-line-height;
+    }
+    &-problems {
+     width: 100%;
+     display: flex;
+     flex-direction: row;
+     &-tag {
+      width: $fancy-rank-tag-width;
+      height: 24px;
+      margin: 4px 8px 4px 0;
+      background: rgba(255, 255, 255, 0.15);
+      text-align: center;
+      border-radius: 4px;
+      &.accepted {
+       background: #95de64;
+      }
+      &.changed {
+       background: #fa8c16;
+      }
+      &.failed {
+       background: #f5222d;
+      }
+     }
+    }
+   }
+
+   &-solved {
+    text-align: center;
+    font-size: $fancy-rank-number-size;
+    line-height: $fancy-rank-item-height;
+    width: $fancy-rank-number-size * 2;
+   }
+
+   &-times {
+    text-align: center;
+    font-size: $fancy-rank-number-size;
+    line-height: $fancy-rank-item-height;
+    width: $fancy-rank-number-size * 3;
+   }
+
+  }
+
+ }
+
+}
