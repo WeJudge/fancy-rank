@@ -100,13 +100,24 @@ $fancy-rank-header-height: 32px;
       text-align: center;
       border-radius: 4px;
       &.accepted {
-       background: #95de64;
+       background: rgb(149, 222, 100);
       }
       &.changed {
-       background: #fa8c16;
+       background: rgba(250, 140, 22, 1);
       }
       &.failed {
-       background: #f5222d;
+       background: rgb(245, 34, 45);
+      }
+      @keyframes fancy-rank-tag-pending-animate {
+       from {
+        background: rgba(250, 140, 22, 0);
+       }
+       to {
+        background: rgba(250, 140, 22, 1);
+       }
+      }
+      &.pending {
+       animation: fancy-rank-tag-pending-animate .5s infinite alternate;
       }
      }
     }
@@ -124,6 +135,7 @@ $fancy-rank-header-height: 32px;
     font-size: $fancy-rank-number-size;
     line-height: $fancy-rank-item-height;
     width: $fancy-rank-number-size * 3;
+    margin-right: 16px;
    }
 
   }

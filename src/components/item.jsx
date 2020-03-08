@@ -40,7 +40,7 @@ class FancyRankItem extends React.PureComponent {
           <div className="rank-item-content-problems-tag accepted">233</div>
           <div className="rank-item-content-problems-tag failed">-5</div>
           <div className="rank-item-content-problems-tag changed">-7</div>
-          <div className="rank-item-content-problems-tag">E</div>
+          <div className="rank-item-content-problems-tag pending">+</div>
           <div className="rank-item-content-problems-tag">F</div>
           <div className="rank-item-content-problems-tag">G</div>
         </div>
