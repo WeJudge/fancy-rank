@@ -129,3 +129,6 @@ dist
 
 # WebStrom
 .idea
+
+# NPM
+package-lock.json

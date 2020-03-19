@@ -121,6 +121,18 @@ $fancy-rank-header-height: 32px;
       &.failed {
        background: #cf1322;
       }
+      @keyframes fancy-rank-tag-pending-animate {
+       from {
+        background: rgba(250, 140, 22, 0);
+       }
+       to {
+        background: rgba(250, 140, 22, 1);
+       }
+      }
+      &.pending {
+       animation: fancy-rank-tag-pending-animate .5s infinite alternate;
+
+      }
      }
     }
    }
