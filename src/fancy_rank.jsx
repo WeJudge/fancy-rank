@@ -31,17 +31,24 @@ class FancyRank extends React.Component {
   initState = () => {
     const rankListRaw = JSON.parse(JSON.stringify(get(this.props.fancyRankData, 'ranklist', [])));
     const problemListRaw = JSON.parse(JSON.stringify(get(this.props.fancyRankData, 'problems', [])));
+    const diffSolutionsRaw = JSON.parse(JSON.stringify(get(this.props.fancyRankData, 'diff_solutions', {})));
     const rankList = [];
     const accountInfos = {};
     const problems = [];
     const problemInfos = {};
+    const rollingStatus = {};   // { accountId: { problemId: true } }
     // 执行normalizr操作
     rankListRaw.forEach((item) => {
       const accountId = get(item, 'account.id');
+      const diffSolutions = get(diffSolutionsRaw, `${accountId}`, {});
       rankList.push(accountId);
       accountInfos[accountId] = item;
+      rollingStatus[accountId] = {};
+      Object.keys(diffSolutions).forEach((pid) => {
+        rollingStatus[accountId][pid] = 0;
+      })
     });
-    problemListRaw.sort((a, b) => a.order > b.order);
+    problemListRaw.sort((a, b) => a.order - b.order);
     problemListRaw.forEach((item) => {
       const problemId = get(item, 'problem_id');
       problems.push(problemId);
@@ -52,13 +59,14 @@ class FancyRank extends React.Component {
       accountInfos,
       problems,
       problemInfos,
+      rollingStatus,
+      diffSolutionsRaw,
       currentIndex: 0,
     }
   };
 
   setPosition = (from, to) => {
     const { indexMapping } = this.state;
-
 
   };
 
@@ -79,6 +87,8 @@ class FancyRank extends React.Component {
             problems={this.state.problems}
             problemInfos={this.state.problemInfos}
             accountInfo={this.state.accountInfos[accountId]}
+            diffSolutions={this.state.diffSolutionsRaw[accountId]}
+            rollingStatus={this.state.rollingStatus[accountId]}
           />;
         })}
       </div>

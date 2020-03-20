@@ -1,10 +1,9 @@
 import React from 'react';
-import { Avatar, Icon } from 'antd';
+import { Avatar } from 'antd';
 import { get } from 'lodash';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import { UserOutlined } from '@ant-design/icons';
-import ReactSvg from '../images/react.svg'
 
 export const indexToChar = (index) => {
   const indexParsed = parseInt(index, 10);
@@ -19,14 +18,52 @@ class FancyRankItem extends React.Component {
     problems: PropTypes.arrayOf(PropTypes.string),
     problemInfos: PropTypes.shape({}),
     accountInfo: PropTypes.shape({}),
+    diffSolutions: PropTypes.shape({}),   // Solution变化数据
+    rollingStatus: PropTypes.shape({}),   // 滚榜判定情况
   };
 
   static defaultProps = {};
 
-  state = {};
+  static getDerivedStateFromProps (nextProps, prevState) {
+    const { accountInfo, problems, problemInfos, rollingStatus, diffSolutions } = nextProps;
+    let solved = 0;
+    let totalUsedTime = 0;
+    problems.map((pid) => {
+      const hasNewStatus = rollingStatus.hasOwnProperty(pid);
+      const hasStatus = get(accountInfo, 'solutions', {}).hasOwnProperty(pid);
+      let accepted = 0, timeUsed = 0;
+      if (hasNewStatus) {
+        // 有diff记录的时候用diff里边的时间
+        accepted = get(diffSolutions, `${pid}.accepted`, 0);
+        timeUsed = get(diffSolutions, `${pid}.time_used`, 0);
+        if (rollingStatus[pid] === 2) {
+          // 滚动过，只有过题了才记录时间
+          solved += (accepted > 0 ? 1 : 0);
+          totalUsedTime += (accepted > 0 ? timeUsed : 0);
+        }
+      } else {
+        // 否则用account里边的时间
+        if (hasStatus) {
+          accepted = get(accountInfo, `solutions.${pid}.accepted`, 0);
+          timeUsed = get(accountInfo, `solutions.${pid}.time_used`, 0);
+          solved += (accepted > 0 ? 1 : 0);
+          totalUsedTime += (accepted > 0 ? timeUsed : 0);
+        }
+      }
+    });
+    return {
+      solved,
+      totalUsedTime
+    }
+  }
+
+  state = {
+    solved: 0,
+    totalUsedTime: 0,
+  };
 
   render() {
-    const { accountInfo, problems, problemInfos } = this.props;
+    const { accountInfo, problems, problemInfos, rollingStatus, diffSolutions } = this.props;
     return <div
       className="fancy-rank-item"
       style={{ top: this.props.top }}
@@ -41,43 +78,63 @@ class FancyRankItem extends React.Component {
         </div>
         <div className="rank-item-content-problems">
           {problems.map((pid) => {
+            const hasNewStatus = rollingStatus.hasOwnProperty(pid);     // 是否有diff记录
             const problem = problemInfos[pid];
-            const submission = get(accountInfo, `solutions.${pid}.submission`, 0);
-            const accepted = get(accountInfo, `solutions.${pid}.accepted`, 0);
-            const penalty = get(accountInfo, `solutions.${pid}.penalty`, 0);
-            const timeUsed = (get(accountInfo, `solutions.${pid}.time_used`, 0) / 60).toFixed(0);
+
+            let submission = 0, accepted = 0, lastSubmitTime = 0;
+            if (hasNewStatus) {
+              // 有diff记录的时候用diff里边的时间
+              submission = get(diffSolutions, `${pid}.submission`, 0);
+              accepted = get(diffSolutions, `${pid}.accepted`, 0);
+              lastSubmitTime = Math.floor(get(diffSolutions, `${pid}.last_submit_time`, 0) / 60);
+            } else {
+              // 否则用account里边的时间
+              submission = get(accountInfo, `solutions.${pid}.submission`, 0);
+              accepted = get(accountInfo, `solutions.${pid}.accepted`, 0);
+              lastSubmitTime = Math.floor(get(accountInfo, `solutions.${pid}.last_submit_time`, 0) / 60);
+            }
+
             const isAccepted = accepted > 0;
             const hasSubmitted = submission > 0;
-            const classMapping = {
-              accepted: isAccepted,
-              failed: hasSubmitted && !isAccepted,
-            };
-            const buildText = () => {
-              if (classMapping.accepted) {
-                return `${penalty} - ${ timeUsed}`;
-              } else if (classMapping.failed) {
-                return `${penalty}`;
+            // 颜色设置
+            const classMapping = {};
+            if (hasNewStatus) {
+              if (rollingStatus[pid] === 2) {
+                // 有滚动过
+                classMapping['accepted'] = isAccepted;
+                classMapping['failed'] = hasSubmitted && !isAccepted;
+              } else if (rollingStatus[pid] === 1) {
+                // 滚动中
+                classMapping['pending'] = true;
+              } else {
+                // 没有滚动过
+                classMapping['changed'] = true;
               }
-              return indexToChar(get(problem, 'order', 0))
+            } else {
+              classMapping['accepted'] = isAccepted;
+              classMapping['failed'] = hasSubmitted && !isAccepted;
+            }
+            // 文本设置
+            const buildText = () => {
+              if (submission > 1) {
+                return `${submission} - ${lastSubmitTime}`;
+              } else if (submission === 1) {
+                return `${lastSubmitTime}`;
+              } else {
+                return indexToChar(get(problem, 'order', 0))
+              }
             };
-            return <div className={classnames("rank-item-content-problems-tag", classMapping)}>
+            return <div key={pid} className={classnames("rank-item-content-problems-tag", classMapping)}>
               {buildText()}
             </div>;
           })}
-          {/*<div className="rank-item-content-problems-tag">A</div>*/}
-          {/*<div className="rank-item-content-problems-tag accepted">233</div>*/}
-          {/*<div className="rank-item-content-problems-tag failed">-5</div>*/}
-          {/*<div className="rank-item-content-problems-tag changed">-7</div>*/}
-          {/*<div className="rank-item-content-problems-tag">E</div>*/}
-          {/*<div className="rank-item-content-problems-tag">F</div>*/}
-          {/*<div className="rank-item-content-problems-tag">G</div>*/}
         </div>
       </div>
       <div className="rank-item-solved">
-        {get(accountInfo, 'solved')}
+        {this.state.solved}
       </div>
       <div className="rank-item-times">
-        {(get(accountInfo, 'time_used') / 60).toFixed(0)}
+        {(this.state.totalUsedTime / 60).toFixed(0)}
       </div>
     </div>;
   }

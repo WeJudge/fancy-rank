@@ -7,10 +7,10 @@ $fancy-rank-header-height: 32px;
 
 .fancy-rank {
  min-width: 1280px;
- background: rgba(0, 0, 0, 0.7);
+ background: rgba(0, 0, 0, 0.85);
  top: 5%;
  width: 100%;
- height: 90%;
+ height: 96%;
  margin: 0 auto;
  border-radius: 8px;
  overflow: hidden;
@@ -113,10 +113,10 @@ $fancy-rank-header-height: 32px;
       text-align: center;
       border-radius: 4px;
       &.accepted {
-       background: #237804;
+       background: #389e0d;
       }
       &.changed {
-       background: #d48806;
+       background: #faad14;
       }
       &.failed {
        background: #cf1322;
@@ -131,7 +131,6 @@ $fancy-rank-header-height: 32px;
       }
       &.pending {
        animation: fancy-rank-tag-pending-animate .5s infinite alternate;
-
       }
      }
     }
