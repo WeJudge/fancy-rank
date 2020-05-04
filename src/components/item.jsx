@@ -131,10 +131,10 @@ class FancyRankItem extends React.Component {
         </div>
       </div>
       <div className="rank-item-solved">
-        {this.state.solved}
+        <span>{this.state.solved}</span>
       </div>
       <div className="rank-item-times">
-        {(this.state.totalUsedTime / 60).toFixed(0)}
+        <span>{(this.state.totalUsedTime / 60).toFixed(0)}</span>
       </div>
     </div>;
   }

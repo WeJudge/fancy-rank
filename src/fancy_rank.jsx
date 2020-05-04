@@ -21,7 +21,7 @@ class FancyRank extends React.Component {
       currentIndex: 0,
       ...this.initState(),
     };
-    console.log(this.state);
+    console.log(this.state, this.props.fancyRankData);
   }
 
   state = {
@@ -65,15 +65,32 @@ class FancyRank extends React.Component {
     }
   };
 
-  setPosition = (from, to) => {
-    const { indexMapping } = this.state;
-
+  setPosition = (fromIndex, toIndex) => {
+    const { rankList } = this.state;
+    if (fromIndex >= rankList.length || toIndex >= rankList.length || fromIndex <= toIndex) {
+      return;
+    }
+    const target = rankList[fromIndex];
+    for (let i = fromIndex; i > toIndex; i--) {
+      rankList[i] = rankList[i - 1];
+    }
+    rankList[toIndex] = target;
+    this.setState({
+      rankList,
+    })
   };
+
+  componentDidMount() {
+    setTimeout(() => {
+      this.setPosition(15, 0)
+    }, 3000)
+  }
 
   render() {
     return <div className="fancy-rank">
       <div className="fancy-rank-header">
         <div className="fancy-rank-header-item rank">排名</div>
+        <div className="fancy-rank-header-item fill_logo" />
         <div className="fancy-rank-header-item fill" />
         <div className="fancy-rank-header-item solved">解题</div>
         <div className="fancy-rank-header-item time">时间</div>

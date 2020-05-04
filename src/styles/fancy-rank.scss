@@ -29,14 +29,21 @@ $fancy-rank-header-height: 32px;
    &.fill {
     flex: 1 1 auto;
    }
+   &.fill_logo {
+    width: $fancy-rank-number-size * 3;
+   }
    &.rank {
     width: $fancy-rank-number-size * 3;
    }
    &.solved {
-    width: $fancy-rank-number-size * 2;
+    width: $fancy-rank-number-size * 3;
+    text-align: right;
+    padding-right: 8px;
    }
    &.time {
-    width: $fancy-rank-number-size * 3;
+    width: $fancy-rank-number-size * 4;
+    text-align: right;
+    padding-right: 8px;
    }
   }
  }
@@ -60,6 +67,7 @@ $fancy-rank-header-height: 32px;
   right: 0;
   display: flex;
   flex-direction: row;
+  transition: top 2s;
 
   &.moving {
    transition: top 2s ease-in-out;
@@ -139,16 +147,16 @@ $fancy-rank-header-height: 32px;
     text-align: center;
     font-size: $fancy-rank-number-size;
     line-height: $fancy-rank-item-height;
-    width: $fancy-rank-number-size * 2;
-    min-width: $fancy-rank-number-size * 2;
+    width: $fancy-rank-number-size * 3;
+    min-width: $fancy-rank-number-size * 3;
    }
 
    &-times {
     text-align: center;
     font-size: $fancy-rank-number-size;
     line-height: $fancy-rank-item-height;
-    width: $fancy-rank-number-size * 3;
-    min-width: $fancy-rank-number-size * 3;
+    width: $fancy-rank-number-size * 4;
+    min-width: $fancy-rank-number-size * 4;
    }
 
   }
