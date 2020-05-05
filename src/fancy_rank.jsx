@@ -18,15 +18,13 @@ class FancyRank extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      playStack: [],
       currentIndex: 0,
+      currentProblemIndex: 0,
       ...this.initState(),
     };
     console.log(this.state, this.props.fancyRankData);
   }
-
-  state = {
-
-  };
 
   initState = () => {
     const rankListRaw = JSON.parse(JSON.stringify(get(this.props.fancyRankData, 'ranklist', [])));
@@ -61,7 +59,8 @@ class FancyRank extends React.Component {
       problemInfos,
       rollingStatus,
       diffSolutionsRaw,
-      currentIndex: 0,
+      currentIndex: rankList.length - 1,
+      currentProblemIndex: 0
     }
   };
 
@@ -81,10 +80,14 @@ class FancyRank extends React.Component {
   };
 
   componentDidMount() {
-    setTimeout(() => {
-      this.setPosition(15, 0)
-    }, 3000)
+
   }
+
+  rollingWorker = () => {
+    // 1: 找到对应的rollingStatus
+    // 2: 标记rollingStatus
+    // 3：记录堆栈
+  };
 
   render() {
     return <div className="fancy-rank">
@@ -101,6 +104,7 @@ class FancyRank extends React.Component {
             key={accountId}
             top={index * ITEM_COMMON_HEIGHT}
             number={index + 1}
+            isCurrent={index === this.state.currentIndex}
             problems={this.state.problems}
             problemInfos={this.state.problemInfos}
             accountInfo={this.state.accountInfos[accountId]}

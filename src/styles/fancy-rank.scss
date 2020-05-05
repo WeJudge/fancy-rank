@@ -67,10 +67,10 @@ $fancy-rank-header-height: 32px;
   right: 0;
   display: flex;
   flex-direction: row;
-  transition: top 2s;
+  transition: top 2s ease-in-out;
 
-  &.moving {
-   transition: top 2s ease-in-out;
+  &.active {
+   background: rgba(255, 255, 255, 0.2) !important;
   }
 
   &:nth-child(even) {

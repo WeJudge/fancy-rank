@@ -14,6 +14,7 @@ export const indexToChar = (index) => {
 class FancyRankItem extends React.Component {
   static propTypes = {
     top: PropTypes.number,
+    isCurrent: PropTypes.bool,
     number: PropTypes.number,
     problems: PropTypes.arrayOf(PropTypes.string),
     problemInfos: PropTypes.shape({}),
@@ -65,7 +66,7 @@ class FancyRankItem extends React.Component {
   render() {
     const { accountInfo, problems, problemInfos, rollingStatus, diffSolutions } = this.props;
     return <div
-      className="fancy-rank-item"
+      className={classnames('fancy-rank-item', {'active': this.props.isCurrent })}
       style={{ top: this.props.top }}
     >
       <div className="rank-item-number">{this.props.number}</div>
