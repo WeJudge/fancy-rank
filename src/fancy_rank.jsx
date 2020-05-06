@@ -6,8 +6,8 @@ import './styles/fancy-rank.scss';
 import FancyRankItem from './components/item';
 
 const ITEM_COMMON_HEIGHT = 80;
-const COMMON_WAIT_TIME = .5 * 1000;
-const ROLLING_NEXT_DURATION = .5 * 1000;
+const COMMON_WAIT_TIME = 2 * 1000;
+const ROLLING_NEXT_DURATION = 2 * 1000;
 
 class FancyRank extends React.Component {
   static propTypes = {
@@ -20,7 +20,6 @@ class FancyRank extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      playStack: [],
       currentIndex: -1,
       currentProblemIndex: -1,
       ...this.initState(),
@@ -68,6 +67,8 @@ class FancyRank extends React.Component {
 
   rollingWorker = null;
   hadMove = false;      // 如果有移动过项，会选中这个，防止pindex == 1时自动currentIndex - 1
+  playStack = [];       // 播放栈
+  playing = false;      // 播放状态
 
   setPosition = (fromIndex, toIndex) => {
     const { rankList } = this.state;
@@ -85,9 +86,36 @@ class FancyRank extends React.Component {
   };
 
   componentDidMount() {
-    this.scrollToTarget(ITEM_COMMON_HEIGHT * this.state.rankList.length);
-    this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION)
+    window.addEventListener('keydown', this.handleKeyBoardEvent);
   }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.handleKeyBoardEvent);
+  }
+
+  handleKeyBoardEvent = (e) => {
+    const clearWorker = () => {
+      if (this.rollingWorker) {
+        clearTimeout(this.rollingWorker);
+        this.rollingWorker = null;
+      }
+    };
+    e.stopPropagation();
+    e.preventDefault();
+    if (e.code === 'Space') {
+      if (this.playing) {
+        this.playing = false;
+        clearWorker();
+        console.log("Pause");
+      } else {
+        clearWorker();
+        this.playing = true;
+        this.scrollToCurrent();
+        this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
+        console.log("Start");
+      }
+    }
+  };
 
   findNextSolution = () => {
     const {
@@ -148,10 +176,16 @@ class FancyRank extends React.Component {
     return -1;
   };
 
+  scrollToCurrent = (cindex) => {
+    const top = ITEM_COMMON_HEIGHT * ((cindex || this.state.currentIndex) - 5);
+    this.scrollToTarget(top > 0 ? top : 0);
+  };
+
   rollingWorkerFunc = () => {
     // 1: 找到对应的rollingStatus
     // 2: 标记rollingStatus
     // 3：记录堆栈
+    if (!this.playing) return;
     const positionResult = this.findNextSolution();
     if (positionResult) {
       if (positionResult.emptyLine) {
@@ -159,11 +193,12 @@ class FancyRank extends React.Component {
           currentIndex: positionResult.cindex,
           currentProblemIndex: positionResult.pindex,
         });
-        const top = ITEM_COMMON_HEIGHT * (positionResult.cindex - 5);
-        this.scrollToTarget(top > 0 ? top : 0);
+        this.scrollToCurrent(positionResult.cindex);
         this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
         return;
       }
+      // 入栈
+      this.playStack.push(positionResult);
       const { rollingStatus, rankList, problems, accountInfos } = this.state;
       const accountId = rankList[positionResult.cindex];
       const problemId = problems[positionResult.pindex];
@@ -173,6 +208,7 @@ class FancyRank extends React.Component {
         currentProblemIndex: positionResult.pindex,
         rollingStatus,
       }, () =>{
+        this.scrollToCurrent(positionResult.cindex);
         // pending闪烁2秒
         setTimeout(() => {
           rollingStatus[accountId][problemId] = 2;
@@ -180,6 +216,8 @@ class FancyRank extends React.Component {
             rollingStatus,
           }, () => {
             if (positionResult.solution.accepted > 0) {
+              // 向栈顶写入动作状态
+              this.playStack[this.playStack.length - 1].isAc = true;
               // 绿了！
               const info = accountInfos[accountId];
               info['solved'] += 1;
@@ -189,6 +227,8 @@ class FancyRank extends React.Component {
                 accountInfos,
               }, () => {
                 const tindex = this.findSortTarget(accountId);
+                // 向栈顶写入目标地址
+                this.playStack[this.playStack.length - 1].tindex = tindex;
                 if (tindex > -1) {
                   // 如果需要移动
                   this.setState({
@@ -204,6 +244,8 @@ class FancyRank extends React.Component {
                 }
               })
             } else {
+              // 向栈顶写入动作状态
+              this.playStack[this.playStack.length - 1].isAc = false;
               this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
             }
           });
@@ -211,6 +253,7 @@ class FancyRank extends React.Component {
       });
     }
   };
+
 
   scrollToTarget = (top) => {
     window.jQuery('#fancy-rank-scroll-warp').scrollTo(top, 500)
