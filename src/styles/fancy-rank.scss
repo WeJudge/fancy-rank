@@ -130,10 +130,10 @@ $fancy-rank-header-height: 32px;
       }
       @keyframes fancy-rank-tag-pending-animate {
        from {
-        background: rgba(250, 140, 22, 0);
+        background: rgba(250, 173, 20, 0);
        }
        to {
-        background: rgba(250, 140, 22, 1);
+        background: rgba(250, 173, 20, 1);
        }
       }
       &.pending {

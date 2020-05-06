@@ -1,6 +1,6 @@
 import React from 'react';
 import { Avatar } from 'antd';
-import { get } from 'lodash';
+import { get, has } from 'lodash';
 import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import { UserOutlined } from '@ant-design/icons';
@@ -21,15 +21,16 @@ class FancyRankItem extends React.Component {
     accountInfo: PropTypes.shape({}),
     diffSolutions: PropTypes.shape({}),   // Solution变化数据
     rollingStatus: PropTypes.shape({}),   // 滚榜判定情况
+    transitionEnd: PropTypes.func.isRequired,
   };
 
   static defaultProps = {};
 
   static getDerivedStateFromProps (nextProps, prevState) {
-    const { accountInfo, problems, problemInfos, rollingStatus, diffSolutions } = nextProps;
+    const { accountInfo, problems, rollingStatus, diffSolutions } = nextProps;
     let solved = 0;
     let totalUsedTime = 0;
-    problems.map((pid) => {
+    problems.forEach((pid) => {
       const hasNewStatus = rollingStatus.hasOwnProperty(pid);
       const hasStatus = get(accountInfo, 'solutions', {}).hasOwnProperty(pid);
       let accepted = 0, timeUsed = 0;
@@ -63,11 +64,18 @@ class FancyRankItem extends React.Component {
     totalUsedTime: 0,
   };
 
+  componentDidMount() {
+    this.itemRef.current.addEventListener('transitionend', this.props.transitionEnd)
+  }
+
+  itemRef = React.createRef();
+
   render() {
     const { accountInfo, problems, problemInfos, rollingStatus, diffSolutions } = this.props;
     return <div
       className={classnames('fancy-rank-item', {'active': this.props.isCurrent })}
       style={{ top: this.props.top }}
+      ref={this.itemRef}
     >
       <div className="rank-item-number">{this.props.number}</div>
       <div className="rank-item-logo">
@@ -79,7 +87,7 @@ class FancyRankItem extends React.Component {
         </div>
         <div className="rank-item-content-problems">
           {problems.map((pid) => {
-            const hasNewStatus = rollingStatus.hasOwnProperty(pid);     // 是否有diff记录
+            const hasNewStatus = has(rollingStatus, pid);     // 是否有diff记录
             const problem = problemInfos[pid];
 
             let submission = 0, accepted = 0, lastSubmitTime = 0;

@@ -1,11 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { get } from 'lodash';
+import { get, has } from 'lodash';
 import resp from './data.json';
 import './styles/fancy-rank.scss';
 import FancyRankItem from './components/item';
 
 const ITEM_COMMON_HEIGHT = 80;
+const COMMON_WAIT_TIME = .5 * 1000;
+const ROLLING_NEXT_DURATION = .5 * 1000;
 
 class FancyRank extends React.Component {
   static propTypes = {
@@ -19,8 +21,8 @@ class FancyRank extends React.Component {
     super(props);
     this.state = {
       playStack: [],
-      currentIndex: 0,
-      currentProblemIndex: 0,
+      currentIndex: -1,
+      currentProblemIndex: -1,
       ...this.initState(),
     };
     console.log(this.state, this.props.fancyRankData);
@@ -38,7 +40,7 @@ class FancyRank extends React.Component {
     // 执行normalizr操作
     rankListRaw.forEach((item) => {
       const accountId = get(item, 'account.id');
-      const diffSolutions = get(diffSolutionsRaw, `${accountId}`, {});
+      const diffSolutions = get(diffSolutionsRaw, accountId, {});
       rankList.push(accountId);
       accountInfos[accountId] = item;
       rollingStatus[accountId] = {};
@@ -59,10 +61,13 @@ class FancyRank extends React.Component {
       problemInfos,
       rollingStatus,
       diffSolutionsRaw,
-      currentIndex: rankList.length - 1,
-      currentProblemIndex: 0
+      currentIndex: rankList.length,
+      currentProblemIndex: -1,
     }
   };
+
+  rollingWorker = null;
+  hadMove = false;      // 如果有移动过项，会选中这个，防止pindex == 1时自动currentIndex - 1
 
   setPosition = (fromIndex, toIndex) => {
     const { rankList } = this.state;
@@ -80,13 +85,132 @@ class FancyRank extends React.Component {
   };
 
   componentDidMount() {
-
+    this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION)
   }
 
-  rollingWorker = () => {
+  findNextSolution = () => {
+    const {
+      problems,
+      rankList,
+      diffSolutionsRaw,
+      currentIndex,
+      rollingStatus,
+      currentProblemIndex
+    } = this.state;
+    let pindex = currentProblemIndex;
+    let cindex = currentIndex;
+    if (!this.hadMove && pindex === -1) {
+      cindex--;
+    }
+    this.hadMove = false;
+    while(cindex >= 0) {
+      const accountId = rankList[cindex];
+      const solutions = get(diffSolutionsRaw, accountId, null) || {};
+      while (++pindex < problems.length) {
+        const pid = problems[pindex];
+        // 找有diff的并且是没有移动过的
+        if (has(solutions, pid) && get(rollingStatus, `${accountId}.${pid}`, 0) === 0) {
+          return {
+            emptyLine: false,
+            solution: solutions[pid],
+            pindex,
+            cindex,
+          }
+        }
+      }
+      pindex = -1;
+      return {
+        emptyLine: true,
+        pindex,
+        cindex,
+      }
+    }
+    return null;
+  };
+
+  findSortTarget = (accountId) => {
+    const { rankList, accountInfos } = this.state;
+    const tinfo = accountInfos[accountId];
+    for (let i = 0; i < rankList.length; i++) {
+      const aid = rankList[i];
+      const sinfo = accountInfos[aid];
+      // 如果解题数少了，直接返回当前i
+      if (sinfo.solved < tinfo.solved) {
+        return i;
+      } else if (sinfo.solved === tinfo.solved) {
+        // 解题相等的时候，比较时间
+        if (sinfo.time_used > tinfo.time_used) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  };
+
+  rollingWorkerFunc = () => {
     // 1: 找到对应的rollingStatus
     // 2: 标记rollingStatus
     // 3：记录堆栈
+    const positionResult = this.findNextSolution();
+    if (positionResult) {
+      if (positionResult.emptyLine) {
+        this.setState({
+          currentIndex: positionResult.cindex,
+          currentProblemIndex: positionResult.pindex,
+        });
+        this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
+        return;
+      }
+      const { rollingStatus, rankList, problems, accountInfos } = this.state;
+      const accountId = rankList[positionResult.cindex];
+      const problemId = problems[positionResult.pindex];
+      rollingStatus[accountId][problemId] = 1;
+      this.setState({
+        currentIndex: positionResult.cindex,
+        currentProblemIndex: positionResult.pindex,
+        rollingStatus,
+      }, () =>{
+        // pending闪烁2秒
+        setTimeout(() => {
+          rollingStatus[accountId][problemId] = 2;
+          this.setState({
+            rollingStatus,
+          }, () => {
+            if (positionResult.solution.accepted > 0) {
+              // 绿了！
+              const info = accountInfos[accountId];
+              info['solved'] += 1;
+              info['time_used'] += get(positionResult, 'solution.time_used', 0);
+              accountInfos[accountId] = info;
+              this.setState({
+                accountInfos,
+              }, () => {
+                const tindex = this.findSortTarget(accountId);
+                if (tindex > -1) {
+                  // 如果需要移动
+                  this.setState({
+                    currentProblemIndex: -1,      // 回退标记
+                  }, () => {
+                    // 飞上去
+                    this.setPosition(positionResult.cindex, tindex);
+                    this.hadMove = true;
+                  })
+                } else {
+                  // 询问下一个
+                  this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
+                }
+              })
+            } else {
+              this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
+            }
+          });
+        }, COMMON_WAIT_TIME);
+      });
+    }
+  };
+
+  handleTransitionEnd = () => {
+    this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
   };
 
   render() {
@@ -110,6 +234,7 @@ class FancyRank extends React.Component {
             accountInfo={this.state.accountInfos[accountId]}
             diffSolutions={this.state.diffSolutionsRaw[accountId]}
             rollingStatus={this.state.rollingStatus[accountId]}
+            transitionEnd={this.handleTransitionEnd}
           />;
         })}
       </div>
