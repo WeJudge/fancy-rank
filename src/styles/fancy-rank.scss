@@ -58,7 +58,12 @@ $fancy-rank-header-height: 32px;
   overflow-x: hidden;
   overflow-y: auto;
  }
-
+ &-placebottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: $fancy-rank-item-height;
+ }
  &-item {
   color: white;
   position: absolute;
@@ -162,5 +167,23 @@ $fancy-rank-header-height: 32px;
   }
 
  }
-
+ &-control {
+  position: absolute;
+  bottom: 0;
+  height: 48px;
+  width: 336px;
+  left: 50%;
+  margin-left: -168px;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  .button {
+   cursor: pointer;
+   color: white;
+   font-size: 32px;
+   padding: 0 16px;
+  }
+ }
 }
