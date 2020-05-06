@@ -85,6 +85,7 @@ class FancyRank extends React.Component {
   };
 
   componentDidMount() {
+    this.scrollToTarget(ITEM_COMMON_HEIGHT * this.state.rankList.length);
     this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION)
   }
 
@@ -158,6 +159,8 @@ class FancyRank extends React.Component {
           currentIndex: positionResult.cindex,
           currentProblemIndex: positionResult.pindex,
         });
+        const top = ITEM_COMMON_HEIGHT * (positionResult.cindex - 5);
+        this.scrollToTarget(top > 0 ? top : 0);
         this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
         return;
       }
@@ -209,6 +212,10 @@ class FancyRank extends React.Component {
     }
   };
 
+  scrollToTarget = (top) => {
+    window.jQuery('#fancy-rank-scroll-warp').scrollTo(top, 500)
+  };
+
   handleTransitionEnd = () => {
     this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
   };
@@ -222,7 +229,7 @@ class FancyRank extends React.Component {
         <div className="fancy-rank-header-item solved">解题</div>
         <div className="fancy-rank-header-item time">时间</div>
       </div>
-      <div className="fancy-rank-warp">
+      <div className="fancy-rank-warp" id="fancy-rank-scroll-warp">
         {this.state.rankList.map((accountId, index) => {
           return <FancyRankItem
             key={accountId}
