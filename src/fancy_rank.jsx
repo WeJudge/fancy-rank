@@ -94,16 +94,26 @@ class FancyRank extends React.Component {
 
   componentDidMount() {
     window.addEventListener('keydown', this.handleKeyBoardEvent);
+    window.addEventListener('beforeunload', this.handleBeforeUnload)
   }
 
   componentWillUnmount() {
     window.removeEventListener('keydown', this.handleKeyBoardEvent);
+    window.removeEventListener('beforeunload', this.handleBeforeUnload)
   }
 
   cleanWorker = () => {
     if (this.rollingWorker) {
       clearTimeout(this.rollingWorker);
       this.rollingWorker = null;
+    }
+  };
+
+  handleBeforeUnload = (e) => {
+    if (this.state.playing) {
+      e.stopPropagation();
+      e.returnValue = false;
+      return false
     }
   };
 
@@ -312,9 +322,6 @@ class FancyRank extends React.Component {
         </div>
         <div className="button" onClick={this.toggleRunning}>
           {this.state.playing ? <PauseCircleFilled /> : <PlayCircleFilled />}
-        </div>
-        <div className="button">
-          <UndoOutlined />
         </div>
         <div className="button">
           <CaretRightFilled />
