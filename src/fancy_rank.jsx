@@ -5,7 +5,6 @@ import {
   PauseCircleFilled,
   CaretLeftFilled,
   CaretRightFilled,
-  UndoOutlined
 } from '@ant-design/icons';
 import { get, has } from 'lodash';
 import resp from './data.json';
@@ -75,7 +74,7 @@ class FancyRank extends React.Component {
 
   rollingWorker = null;
   hadMove = false;      // 如果有移动过项，会选中这个，防止pindex == 1时自动currentIndex - 1
-  playStack = [];       // 播放栈
+  playStack = [];       // 播放栈 (如果要实现向前播放的可以去做这个，我现在懒得去搞了）
 
   setPosition = (fromIndex, toIndex) => {
     const { rankList } = this.state;
@@ -120,8 +119,17 @@ class FancyRank extends React.Component {
   handleKeyBoardEvent = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    if (e.code === 'Space') {
-      this.toggleRunning();
+    console.log(e.code);
+    switch (e.code) {
+      case 'Space':
+        this.toggleRunning();
+        break;
+      case 'ArrowRight':
+      case 'ArrowDown':
+        if (this.state.playing) {
+          this.rollingWorkerFunc(true);
+        }
+        break;
     }
   };
 
@@ -208,11 +216,12 @@ class FancyRank extends React.Component {
     this.scrollToTarget(top > 0 ? top : 0);
   };
 
-  rollingWorkerFunc = () => {
+  rollingWorkerFunc = (noAnimate = false) => {
     // 1: 找到对应的rollingStatus
     // 2: 标记rollingStatus
-    // 3：记录堆栈
+    // 3：执行动画
     if (!this.state.playing) return;
+    this.cleanWorker();
     const positionResult = this.findNextSolution();
     if (positionResult) {
       if (positionResult.emptyLine) {
@@ -236,8 +245,7 @@ class FancyRank extends React.Component {
         rollingStatus,
       }, () =>{
         this.scrollToCurrent(positionResult.cindex);
-        // pending闪烁2秒
-        setTimeout(() => {
+        const showResult = () => {
           rollingStatus[accountId][problemId] = 2;
           this.setState({
             rollingStatus,
@@ -276,7 +284,13 @@ class FancyRank extends React.Component {
               this.rollingWorker = setTimeout(this.rollingWorkerFunc, ROLLING_NEXT_DURATION);
             }
           });
-        }, COMMON_WAIT_TIME);
+        };
+        if (noAnimate) {
+          showResult();
+        } else {
+          // pending闪烁2秒
+          setTimeout(showResult, COMMON_WAIT_TIME);
+        }
       });
     }
   };
@@ -317,13 +331,14 @@ class FancyRank extends React.Component {
         <div className="fancy-rank-placebottom" style={{ top: `${ITEM_COMMON_HEIGHT * this.state.rankList.length}px` }} />
       </div>
       <div className="fancy-rank-control">
-        <div className="button">
-          <CaretLeftFilled />
-        </div>
         <div className="button" onClick={this.toggleRunning}>
           {this.state.playing ? <PauseCircleFilled /> : <PlayCircleFilled />}
         </div>
-        <div className="button">
+        <div className="button" onClick={() => {
+          if (this.state.playing) {
+            this.rollingWorkerFunc(true);
+          }
+        }}>
           <CaretRightFilled />
         </div>
       </div>
